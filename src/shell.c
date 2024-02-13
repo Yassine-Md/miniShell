@@ -57,8 +57,11 @@ bool isInterne(char *cmd){
 	return false;
 }
 
-void errorFork(){
-	fprintf(stderr , "ERROR creation de FILS! \n");
+void errorFork(pid_t pid){
+	if (pid == -1) {
+        perror("fork");
+        exit(EXIT_FAILURE); // Quitte le programme en cas d'erreur de fork
+    }
 }
 
 int nbCmd(cmdline *l){
@@ -84,16 +87,15 @@ void exeCmdInterne(cmdline *l, int i) {
     }
 }
 
-void execCmdExterne(struct cmdline *l){
+void execCmdExterne(struct cmdline *l , int i){
     int status;
     pid_t pid = fork();
-    if (pid == -1){ errorFork(); }
-    else if (pid == 0){ // c'est le fils on va executer la commande
-        execvp(l->seq[0][0], l->seq[0]);
-        exit(0);
-    }
-    else{ // c'est le pere on va attendre la mort du fils 
-        waitpid(-1,&status,0);
+	errorFork(pid); 
+	
+    if (pid == 0){ // c'est le fils on va executer la commande
+        execvp(l->seq[i][0], l->seq[i]);
+        perror("execvp"); // En cas d'erreur d'execution de la commande
+        exit(EXIT_FAILURE);
     }
 }
 
@@ -134,6 +136,85 @@ void pipeCommande(cmdline *l){
     wait(NULL);
 
 }
+
+
+// Fonction pour créer les pipes
+void createPipes(int fd[][2], int n) {
+    for (int i = 0; i < n - 1; i++) {
+        if (pipe(fd[i]) != 0) {
+            perror("pipe");
+            exit(EXIT_FAILURE); // Quitte le programme en cas d'erreur de pipe
+        }
+    }
+}
+
+void closeUnusedPipes(int fd[][2], int n, int currentPipe) {
+    for (int j = 0; j < n; j++) {
+		if(j == currentPipe - 1){ // pipe devant la commande 
+			// fermer une seul cote cote 
+		}else if(j == currentPipe){ // pipe qui precede la commande
+			// fermer une seul cote cote 
+		}else{ 
+            close(fd[j][0]);  // ferme le cote lecture des pipes precedents
+            close(fd[j][1]);  // ferme le cote ecriture des pipes precedents
+        }
+    }
+}
+
+
+void pipeCommande(cmdline *l){
+	int n = nbCmd(l);
+	int fd[n][2]; // cree n descripteurs de fichiers 
+
+	createPipes(fd , n);
+	for (int i=0 ; i<n ; i++){ 
+		if(i == 0){ // premier processus
+			close(fd[0][0]);
+			dup2(fd[0][1] , STDOUT);
+			close(fd[0][1]);
+			execCmdExterne(l,i);
+		}else if(i == n-1){ // dernier processus
+			close(fd[i][1]);
+			dup2(fd[i][0] , STDIN);
+			close(fd[i][0]);
+			execCmdExterne(l,i);
+		}else{ //processus intermediaires
+			//closeUnusedPipes();
+			dup2(fd[i-1][0] , STDIN);
+			dup2(fd[i][1] , STDOUT);
+			// fermer les deux qui reste 
+			
+			execCmdExterne(l,i);
+			
+		}
+			
+		
+	}
+
+	//fermer tous les pipes pour le pere 
+	closeAllPipe();
+	
+	while(wait(NULL) != -1){
+
+	}
+
+}
+
+// Fonction pour fermer tous les descripteurs de fichiers des pipes
+void closeAllPipe(int fd[][2], int n) {
+    for (int i = 0; i < n; i++) {
+        close(fd[i][0]);
+        close(fd[i][1]);
+    }
+}
+
+
+
+
+
+
+
+
 
 void affichage(cmdline *l){
 	int i, j;
@@ -178,3 +259,19 @@ int main()
 
 }
 
+
+/*
+bool redirectionEntree(){
+
+}
+
+bool redirectionSortie(){
+	
+}
+
+void sigInt (int interruption){
+
+}
+void sigChildHandler(int interruption){
+
+}*/
