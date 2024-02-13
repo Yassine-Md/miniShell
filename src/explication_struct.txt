@@ -1,0 +1,5 @@
+
+
+
+readcmd est une fonction de parsing pour une ligne de commande shell
+Elle prend une ligne de texte en entrée et la divise en une structure de données appelée struct cmdline, qui représente une commande shell avec ses arguments, ses redirections d'entrée/sortie, et ses séquences de commandes liées par des pipes.
