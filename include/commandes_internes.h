@@ -2,6 +2,8 @@
 #define __COMMANDES_INTERNES_H__
 
 #include "readcmd.h"
+#include <stdbool.h>
+#define nbCmdInterne 3
 
 bool isInterne(char *cmd);
 void errorFork(pid_t pid);
