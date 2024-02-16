@@ -57,3 +57,10 @@ void execCmdExterne(struct cmdline *l , int i){
         exit(EXIT_FAILURE);
     }
 }
+
+void execCmdWithPipe(struct cmdline *l , int i){
+        execvp(l->seq[i][0], l->seq[i]);
+        perror("execvp"); // En cas d'erreur d'execution de la commande
+        printf("ERROR au niveau de la commade %s\n" , l->seq[i][0]);
+        exit(EXIT_FAILURE);
+}

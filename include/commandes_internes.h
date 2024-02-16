@@ -10,5 +10,6 @@ void errorFork(pid_t pid);
 int nbCmd(cmdline *l);
 void exeCmdInterne(cmdline *l, int i);
 void execCmdExterne(struct cmdline *l, int i);
+void execCmdWithPipe(struct cmdline *l , int i);
 
 #endif
