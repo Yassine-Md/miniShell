@@ -9,6 +9,7 @@
 #include "readcmd.h"
 #include "utils.h"
 #include "commandes_internes.h"
+#include "csapp.h"
 
 
 #define STDIN 0
@@ -51,7 +52,7 @@ void pipeCommande(cmdline *l){
 	createPipes(fd , n);
 	for (int i=0 ; i<n ; i++){ 
 		if(i == 0){ // premier processus
-			close(fd[0commandes_internes.h][0]);
+			close(fd[0][0]);
 			dup2(fd[0][1] , STDOUT);
 			close(fd[0][1]);
 			execCmdExterne(l,i);
@@ -69,17 +70,13 @@ void pipeCommande(cmdline *l){
 			execCmdExterne(l,i);
 			
 		}
-			
-		
 	}
-
 	//fermer tous les pipes pour le pere 
-	closeAllPipe();
+	closeAllPipe(fd , n);
 	
 	while(wait(NULL) != -1){
 
 	}
-
 }
 
 
@@ -87,13 +84,13 @@ void pipeCommande(cmdline *l){
 int main()
 {
 		cmdline *l;
-
+	while(1){
 		printf("shell> ");
 		l = readcmd();
 		//affichage(l);
 		//exeCmdInterne(l,0);
 		pipeCommande(l);
-		
+	}
 
 }
 

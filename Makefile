@@ -12,11 +12,11 @@ CPPFLAGS=
 SRCDIR=src
 INCLUDEDIR=include
 OBJDIR=obj
-DEPSDIR=deps
+DEPSDIR=dep
 BINDIR = bin
 
 
-EXEC= $(BINDIR)/shell
+EXEC=$(BINDIR)/shell
 
 
 #VPATH=src/
@@ -31,7 +31,7 @@ DEPS = $(SRCS:$(SRCDIR)/%.c=$(DEPSDIR)/%.dep)
 # probably be necessary on Solaris for linking network-related functions 
 #LIBS += -lsocket -lnsl -lrt
 LIBS+=-lpthread
-INCLDIR = -I.
+INCLDIR = -I$(INCLUDEDIR)
 
 all: $(EXEC)
 
@@ -49,12 +49,13 @@ $(OBJDIR)/%.o: $(SRCDIR)/%.c
 
 -include $(DEPS)
 
+# Generation des fichiers de dependances
 $(DEPSDIR)/%.dep: $(SRCDIR)/%.c
-	-@mkdir -p dep
-	gcc -MM $(CFLAGS) $< -o $@
-
+	-@mkdir -p $(DEPSDIR)
+	$(CC) -MM $(CFLAGS) $(CPPFLAGS) $(INCLDIR) $< -o $
 
 
 clean:
-	rm -f shell *.o
+	rm -f $(EXEC) 
+	rm -f $(OBJDIR)*.o
 
