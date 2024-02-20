@@ -1,0 +1,167 @@
+
+
+/*
+ * Copyright (C) 2002, Simon Nieuviarts
+ */
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include "readcmd.h"
+#include "csapp.h"
+
+#define MAX_PIPES 10
+
+
+
+// Fonction de traitement du signal SIGCHLD
+void sigchld_handler(int signum) {
+    int status;
+    pid_t pid;
+
+    // Attendre tous les processus enfants sans bloquer
+    while ((pid = waitpid(-1, &status, WNOHANG|WUNTRACED)) > 0) {
+        if (WIFEXITED(status)) {
+            printf("Le processus %d s'est terminé normalement avec le code de sortie %d.\n", pid, WEXITSTATUS(status));
+        } else if (WIFSIGNALED(status)) {
+            printf("Le processus %d s'est terminé suite à un signal avec le code %d.\n", pid, WTERMSIG(status));
+        }
+    }
+}
+
+void execute_command(struct cmdline *l) {
+
+    int num_pipes = 0;
+    int pipefds[MAX_PIPES][2];
+    int i;
+
+    for (i = 0; l->seq[i]; i++) {
+        
+        if (i < MAX_PIPES - 1 && l->seq[i + 1]) {
+            if (pipe(pipefds[i]) == -1) {
+                perror("pipe");
+                exit(EXIT_FAILURE);
+            }
+            num_pipes++;
+        }
+
+        pid_t childpid = Fork();
+        
+        if (childpid < 0) {
+            perror("Fork");
+            exit(EXIT_FAILURE);
+        } else if (childpid == 0) {
+            //printf("\n!!!!!!!!!!!!!!!!!!!!!!wewe %d \n", getppid());
+            //--------------------------------
+            // tq c't pas le 1er et non la dernier cimmande 
+            //--------------------------------
+            if (i != 0) {
+                dup2(pipefds[i - 1][0], STDIN_FILENO);
+            }
+            if (i != num_pipes) {
+                dup2(pipefds[i][1], STDOUT_FILENO);
+            }
+            //--------------------------------
+
+
+
+            /* Close all pipe ends in child */
+            for (int j = 0; j < num_pipes; j++) {
+                close(pipefds[j][0]);
+                close(pipefds[j][1]);
+            }
+            
+            //--------------------------------
+            //redirection :
+            //--------------------------------
+            if (i == 0 && l->in) {
+                int fin = open(l->in, O_RDONLY);
+                dup2(fin, STDIN_FILENO);
+                close(fin);
+            }
+
+            if (!(l->seq[i+1]) && l->out) {
+                int fout = open(l->out, O_WRONLY | O_CREAT, 0644);
+                if (fout < 0) {
+                    fprintf(stderr,"%s : Permission denied\n", l->out);
+                    exit(EXIT_FAILURE);
+                }
+
+                dup2(fout, STDOUT_FILENO);
+                close(fout);
+            }
+            //--------------------------------
+
+            
+            
+            if (execvp(l->seq[i][0], l->seq[i]) < 0) {
+                fprintf(stderr, "%s: command not found\n", l->seq[i][0]);
+                exit(EXIT_FAILURE);
+            }
+            
+            exit(0);
+
+        } else {
+            //printf("father is about to wait \n");
+            if (i != 0)
+                close(pipefds[i-1][1]);
+                
+            Waitpid(childpid,NULL,0);
+            //printf("\nfather finsihed   waiting \n");
+        }
+    }
+}
+
+
+int main() {
+
+    Signal(SIGCHLD, sigchld_handler);
+
+    while (1) {
+        pid_t p;
+        struct cmdline *l;
+
+        printf("shell> ");
+        l = readcmd();
+
+        /* If input stream closed, normal termination */
+        if (!l) {
+            printf("exit\n");
+            exit(0);
+        }
+        
+        while (!(l->seq) || !(l->seq[0]) || l->err) {
+            if (l->err) {
+                // Syntax error, read another command 
+                printf("error: %s\n", l->err);
+            }
+            printf("shell> ");
+            l = readcmd();
+        }
+        
+
+        if ( strcmp(l->seq[0][0], "quit") == 0 || strcmp(l->seq[0][0], "q") == 0 ){
+            exit(0);
+        } else {
+            if (l->bg == 1){
+                printf("oiulala\n");
+                p = Fork();
+                if (p==0){
+                    execute_command(l);
+                    exit(0);
+                } else {
+                    
+                    printf("!!!!%d\n", (int) p);
+                    //Waitpid(p,NULL,WNOHANG|WUNTRACED);
+                }
+
+            } else {
+                printf("re\n");
+                execute_command(l);
+            }
+            
+            
+        }
+    }
+    return 0;
+}

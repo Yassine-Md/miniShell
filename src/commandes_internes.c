@@ -59,8 +59,26 @@ void execCmdExterne(struct cmdline *l , int i){
 }
 
 void execCmdWithPipe(struct cmdline *l , int i){
-        execvp(l->seq[i][0], l->seq[i]);
-        perror("execvp"); // En cas d'erreur d'execution de la commande
-        printf("ERROR au niveau de la commade %s\n" , l->seq[i][0]);
-        exit(EXIT_FAILURE);
+    execvp(l->seq[i][0], l->seq[i]);
+    perror("execvp"); // En cas d'erreur d'execution de la commande
+    printf("ERROR au niveau de la commade %s\n" , l->seq[i][0]);
+    exit(EXIT_FAILURE);
+}
+
+void redirectIOPipe(int cmdCourant , int nbCmd, int **fd) {
+    if (cmdCourant != 0) { // si ce n'est pas la 1er commande
+        if (dup2(fd[cmdCourant-1][0], STDIN_FILENO) == -1){
+            perror("dup2 stdin");
+            exit(EXIT_FAILURE);
+        }
+        close(fd[cmdCourant-1][0]);
+    }
+
+    if (cmdCourant != nbCmd) { // si ce n'est pas la derniere commande
+        if (dup2(fd[cmdCourant][1], STDOUT_FILENO) == -1){
+            perror("dup2 stdout");
+            exit(EXIT_FAILURE);
+        }
+        close(fd[cmdCourant][1]);
+    }
 }

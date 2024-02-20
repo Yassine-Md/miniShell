@@ -16,55 +16,75 @@
 #define STDOUT 1
 #define STDERR 2
 
+/*
+comment savoir un processus a changer de status avec waitpid
+
+la reception de sigchild est occurer lorsque le processus fils change d'etat 
+*/
+
+
+int** allocateDescripteurs(int nbPipes) {
+    int** fd = malloc(sizeof(int*) * nbPipes);
+    if (fd == NULL) {
+        perror("malloc");
+        exit(EXIT_FAILURE);
+    }
+
+    // Allouer deux cases pour chaque i
+    for (int i = 0; i < nbPipes; i++) {
+        fd[i] = malloc(sizeof(int) * 2);
+        if (fd[i] == NULL) {
+            perror("malloc");
+            exit(EXIT_FAILURE);
+        }
+    }
+
+    return fd;
+}
 
 void pipeCommande(cmdline *l) {
     int n = nbCmd(l);
-    int fd[n-1][2];
+	int nbPipes = n-1 ;
+	int numPipe = 0;
+    //int fd[n-1][2];
 
-    createPipes(fd, n);
+	int** fd = allocateDescripteurs(nbPipes);
+
 	pid_t childpid;
 
-    for (int i = 0; i < n; i++) {
-		if((childpid = Fork()) == 0){ 
-
-			if (i == 0) {
-				printf("aa\n");
-				closeUnusedPipes(fd , n , i);
-				dup2(fd[0][1], STDOUT);
-				// execution de la commande 
-				// Exécution de la commande
-        	} else if (i == n - 1) {
-				printf("aaa\n");
-				closeUnusedPipes(fd , n , i);
-				dup2(fd[i-1][0], STDIN);
-				// execution de la commande
-				// Exécution de la commande
-        	} else {
-				printf("aaaa\n");
-				closeUnusedPipes(fd , n , i);
-				dup2(fd[i-1][1], STDIN);
-				dup2(fd[i][0], STDOUT);	
-				// execution de la commande	
-				// Exécution de la commande
+    for (int i = 0; l->seq[i] != NULL; i++) {
+		// creation de pipe dans le pere 
+		if(i < nbPipes){
+			if (pipe(fd[i]) != 0) {
+				perror("pipe");
+				exit(EXIT_FAILURE); // Quitte le programme en cas d'erreur de pipe
         	}
-			execCmdWithPipe(l,i);
-
+			numPipe ++;
 		}
 
-    }
+		if((childpid = Fork()) == 0){ //fils
+			redirectIOPipe(i , nbPipes, fd);
+			execCmdWithPipe(l,i);
+			// quit le processus fils 
+            exit(0);
 
-    closeAllPipe(fd, n);
-
-    for (int i = 0; i < n; i++) {
-        wait(NULL);
-    }
+		}else{ //pere
+			// fermer le pipe creer /* chaque fois on cree un pipe pour qu'il soit dupliquer et utiliser dans le fils on le ferme directement dans le pere on ferme le pipe une fois qu'il est deja utiliser par le fils c'est pour ca qu'on fait le decalage de i-1*/
+			if (i != 0){
+				close(fd[i-1][1]);
+			}
+  
+            Waitpid(childpid,NULL,0);
+		}
+	}
 }
+
 
 
 
 int main()
 {
-		cmdline *l;
+	cmdline *l;
 	while(1){
 		printf("shell> ");
 		l = readcmd();

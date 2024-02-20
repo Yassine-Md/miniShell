@@ -5,63 +5,26 @@
 #include "csapp.h"
 
 // Fonction pour créer les pipes
-void createPipes(int fd[][2], int n) {
+/*void createPipes(int fd[][2], int n) {
     for (int i = 0; i < n - 1; i++) {
         if (pipe(fd[i]) != 0) {
             perror("pipe");
             exit(EXIT_FAILURE); // Quitte le programme en cas d'erreur de pipe
         }
     }
-}
-
-
-// n est le nombre de commandes
-void closeUnusedPipes(int fd[][2], int n, int currentCmd) { 
-		if(currentCmd == 0) { // fermer tous les pipes sauf l'entrer du premier 
-			for (int j = 0; j < n-1; j++) {
-				if(j != 0){  
-					close(fd[j][0]); // ferme le côté lecture des pipes suivants
-            		close(fd[j][1]); // ferme le côté écriture des pipes suivants
-				}else{ // 1er pipe
-					close(fd[j][0]); // ferme le côté lecture des pipes suivants
-				}
-			}
-			
-		}else if(currentCmd == n-1){// fermer tous les pipes sauf sortie du dernier pipe
-			for (int j = 0; j < n-1; j++) {
-				if(j != currentCmd-1){
-					close(fd[j][0]); // ferme le côté lecture des pipes suivants
-            		close(fd[j][1]); // ferme le côté écriture des pipes suivants
-				}else{
-					close(fd[j][1]); // ferme le côté ecriture des pipes suivants
-				}
-			}
-			
-		}else{ // fermer tous sauf sortie de j -1 et l'entree de j
-			for (int j = 0; j < n-1; j++) {
-				if(j == currentCmd || j == currentCmd-1){
-					//pipe precedant la commande
-					close(fd[j-1][1]); // ferme le côté ecriture des pipes precedeant
-					//pipe suivant la commande
-            		close(fd[j][0]); // ferme le côté lecture des pipes suivants
-				}else{
-					close(fd[j][0]); // ferme le côté ecriture des 
-					close(fd[j][1]); // ferme le côté lecture des 
-				}
-			}
-
-		}
-}
+}*/
 
 
 
+
+/*erreur lorsqu'on est dans la 1er commande */
 // Fonction pour fermer tous les descripteurs de fichiers des pipes
-void closeAllPipe(int fd[][2], int n) {
-    for (int i = 0; i < n-1; i++) {
-        close(fd[i][0]);
-        close(fd[i][1]);
+/*void closeAllPipe(int **fd , int nbPipe) {
+    for (int j = 0; j < nbPipe; j++) {
+    	close(fd[j][0]);
+        close(fd[j][1]);
     }
-}
+}*/
 
 void affichage(cmdline *l){
 	int i, j;
@@ -73,7 +36,8 @@ void affichage(cmdline *l){
 
 	if (l->err) {
 		/* Syntax error, read another command */
-		printf("error: %s\n", l->err);
+		printf("error: %s\n", l->err);/*void closeAllPipe(int **fd, int nbPipe);*/
+
 		//continue;
 	}
 
