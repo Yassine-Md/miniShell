@@ -249,6 +249,12 @@ struct cmdline *readcmd(void)
                 goto error;
             }
 
+            // verifier que c'est a la fin de la ligne
+            /*if(s->seq[i] != NULL){
+                s->err = "misplaced bg";
+                goto error;
+            }*/
+
             s->background = 1;
             break;
 

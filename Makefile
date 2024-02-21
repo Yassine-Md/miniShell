@@ -49,3 +49,4 @@ $(DEPSDIR)/%.dep: $(SRCDIR)/%.c
 clean:
 	rm -f $(EXEC)
 	rm -f $(OBJDIR)/*.o
+	-rm -r dep
