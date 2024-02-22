@@ -78,3 +78,13 @@ void execCmdWithPipe(struct cmdline *l , int i){
 
 }
 
+void redirection_in_out (struct cmdline *l){
+     if (l->out != NULL){
+            int num = open(l->out,O_WRONLY|O_CREAT,0644);//verifier si le num n'est pas la strdout
+            dup2(num, 1);                   //O_CREAT pour verifier si le fichier exeistant ou pas   // definir les premissions pour la creation
+        } // c'est le fils on va executer la commande
+        if (l->in !=NULL){
+            int num = open(l->in, O_RDONLY);
+            dup2(num, 0);
+        }
+}

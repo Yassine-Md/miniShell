@@ -65,7 +65,7 @@ int** allocateDescripteurs(int nbPipes) {
 
 void closeAllPipe(int **fd , int nbPipe) {
     for (int j = 0; j < nbPipe; j++) {
-    	close(fd[j][0]);
+        close(fd[j][0]);
         close(fd[j][1]);
     }
 }
@@ -74,16 +74,16 @@ void closeAllPipe(int **fd , int nbPipe) {
 void redirectIOPipe(int cmdCourant , int nbPipes, int **fd) {
     if (cmdCourant != 0) { // si ce n'est pas la 1er commande
         if(dup2(fd[cmdCourant-1][0], STDIN_FILENO) == -1){
-			perror("dup2 stdin");
+            perror("dup2 stdin");
             exit(EXIT_FAILURE);
-		}
+        }
     }
 
     if (cmdCourant != nbPipes) { // si ce n'est pas la derniere commande
         if(dup2(fd[cmdCourant][1], STDOUT_FILENO) == -1){
-			perror("dup2 stdout");
+            perror("dup2 stdout");
             exit(EXIT_FAILURE);
-		}
+        }
     }
 }
 
@@ -101,10 +101,10 @@ void handlerSigTstp(int sig) {
     // Mettre en pause le processus en cours d'exécution
     if (numJobs < MAX_JOBS) {
         int jobIndex = numJobs++;
-		// assignier le pid 
+        // assignier le pid 
         jobs[jobIndex].pid = getpid();
         printf("Job [%d] (%d) stopped\n", jobIndex + 1, jobs[jobIndex].pid);
-		strcpy(jobs[jobIndex].command,command);
+        strcpy(jobs[jobIndex].command,command);
         raise(SIGSTOP); // Suspendre le processus actuel
         // Afficher la liste des jobs après l'arrêt du processus
         printJobs(jobs , numJobs);
@@ -115,88 +115,97 @@ void handlerSigTstp(int sig) {
 
 /*
 void handlerSigInt(int sig) {
-	if (!background) { // si on est dans le forground
-		Kill(-foregroundGroup, SIGINT); //tuer tous les processus qui appartient au group de forground	} else {
-		printf("tous les processus du foreground sont tuer\n");
-	}
+    if (!background) { // si on est dans le forground
+        Kill(-foregroundGroup, SIGINT); //tuer tous les processus qui appartient au group de forground  } else {
+        printf("tous les processus du foreground sont tuer\n");
+    }
 }*/
 
+void handlerSigInt(int sig) {
+    // Affiche un message indiquant que le processus fils a reçu un signal SIGINT
+    fprintf(stderr, "Processus fils %d : Signal SIGINT reçu. Terminaison en cours...\n", getpid());
+    
+    // Tuer le processus fils en envoyant un signal SIGINT à lui-même
+    kill(getpid(), SIGINT);
+}
 
 void pipeCommande(cmdline *l) {
     int n = nbCmd(l);
-	int nbPipes = n-1 ;
-	int numPipe = 0;
+    int nbPipes = n-1 ;
+    int numPipe = 0;
     //int fd[n-1][2];
 
-	int** fd = allocateDescripteurs(nbPipes);
+    int** fd = allocateDescripteurs(nbPipes);
 
-	pid_t childpid;
-	pid_t pgid = 0; // Initialiser pgid à 0
+    pid_t childpid;
+    pid_t pgid = 0; // Initialiser pgid à 0
 
     for (int i = 0; l->seq[i] != NULL; i++) {
-		// creation de pipe dans le pere 
-		if(i < nbPipes){
-			if (pipe(fd[i]) != 0) {
-				perror("pipe");
-				exit(EXIT_FAILURE); // Quitte le programme en cas d'erreur de pipe
-        	}
-			numPipe ++;
-		}
-		if((childpid = Fork()) == 0){ //fils
-			// Rétablir le comportement par défaut de SIGINT
-			Signal(SIGINT, SIG_DFL);
+        // creation de pipe dans le pere 
+        if(i < nbPipes){
+            if (pipe(fd[i]) != 0) {
+                perror("pipe");
+                exit(EXIT_FAILURE); // Quitte le programme en cas d'erreur de pipe
+            }
+            numPipe ++;
+        }
+        if((childpid = Fork()) == 0){ //fils
+            // Rétablir le comportement par défaut de SIGINT
+            Signal(SIGINT, handlerSigInt);
 
-			// Modifier le GPID des fils
+            // Modifier le GPID des fils
             if (pgid == 0) {
                 // Si c'est le premier fils, utiliser son PID comme nouveau GPID
                 pgid = getpid();
-				printf("pgid : %d\n",pgid);
+                printf("pgid a definir %d\n",pgid);
             }
 
-            if (setpgid(0, getpid()) == -1) {
+            if (setpgid(0, pgid) == -1) {
                 perror("setpgid");
                 exit(EXIT_FAILURE);
             }
-			printf("Processus %d et lui attribuer le gpid : %d \n", getpid(),getgid());
+            printf("Processus num %d et lui attribuer le gpid : %d  et doit etre %d\n", getpid(), getgid() , pgid);
+            
 
-			if(l->background){
-				printf("Processus %d en cours d'exécution en arrière-plan...\n" , getpid()); // pq getpid renvoie tjrs le gpid 27908 alors qu'il correspond a rien 
-				Signal(SIGCHLD , SigChildHandler);
-			}
-			// dans 1er commande uniquement qu'on va rederiger la sortie vers l'entrer du pipe otherwise on deriger la sortie du commande vers la sortie standard
-			/*if (i != 0) {
+            if(l->background){
+                printf("Processus %d en cours d'exécution en arrière-plan...\n" , getpid()); // pq getpid renvoie tjrs le gpid 27908 alors qu'il correspond a rien 
+                Signal(SIGCHLD , SigChildHandler);
+            }
+            
+            // dans 1er commande uniquement qu'on va rederiger la sortie vers l'entrer du pipe otherwise on deriger la sortie du commande vers la sortie standard
+            /*if (i != 0) {
                 dup2(fd[i - 1][0], STDIN_FILENO);
             }
-			//lorsque ce n'est pas la dernier commande on redirige la sortie standard vers le pipe qui suit 
+            //lorsque ce n'est pas la dernier commande on redirige la sortie standard vers le pipe qui suit 
             if (i != nbPipes) {
                dup2(fd[i][1], STDOUT_FILENO);
             }*/
-			redirectIOPipe(i , nbPipes, fd);
+            redirectIOPipe(i , nbPipes, fd);
 
             /*for (int j = 0; j < numPipe; j++) {
                 close(fd[j][0]);
                 close(fd[j][1]);
             }*/
-			closeAllPipe(fd , numPipe);
+            closeAllPipe(fd , numPipe);
 
-			/*if (execvp(l->seq[i][0], l->seq[i]) < 0) {
+            /*if (execvp(l->seq[i][0], l->seq[i]) < 0) {
                 fprintf(stderr, "%s: command not found\n", l->seq[i][0]);
                 exit(EXIT_FAILURE);
             }*/
-			execCmdWithPipe(l,i);
+            execCmdWithPipe(l,i);
             
-			// quit le processus fils 
+            // quit le processus fils 
             exit(0);
 
-		}else{ //pere
-			// fermer le pipe creer /* chaque fois on cree un pipe pour qu'il soit dupliquer et utiliser dans le fils on le ferme directement dans le pere on ferme le pipe une fois qu'il est deja utiliser par le fils c'est pour ca qu'on fait le decalage de i-1*/
-			if (i != 0){
-				close(fd[i-1][1]);
-			}
+        }else{ //pere
+            // fermer le pipe creer /* chaque fois on cree un pipe pour qu'il soit dupliquer et utiliser dans le fils on le ferme directement dans le pere on ferme le pipe une fois qu'il est deja utiliser par le fils c'est pour ca qu'on fait le decalage de i-1*/
+            if (i != 0){
+                close(fd[i-1][1]);
+            }
 
-            //Waitpid(childpid,NULL,0);
-		}
-	}
+            Waitpid(childpid,NULL,0);
+        }
+    }
 }
 
 
@@ -205,16 +214,17 @@ void pipeCommande(cmdline *l) {
 
 int main()
 {
-	// le pere ignore le sigInt
-	Signal(SIGINT, SIG_IGN);
-	cmdline *l;
-	while(1){
-		printf("shell> ");
-		l = readcmd();
-		affichage(l);
-		//exeCmdInterne(l,0);
-		pipeCommande(l);
-	}
+    // le pere ignore le sigInt
+    Signal(SIGINT, SIG_IGN);
+    cmdline *l;
+    while(1){
+        printf("shell> ");
+        l = readcmd();
+        affichage(l);
+        //exeCmdInterne(l,0);
+        pipeCommande(l);
+        printf("le pgid est %d----%d\n",getgid(),getpid());
+    }
 }
 
 
@@ -224,7 +234,7 @@ bool redirectionEntree(){
 }
 
 bool redirectionSortie(){
-	
+    
 }
 
 
