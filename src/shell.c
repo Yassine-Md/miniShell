@@ -20,11 +20,18 @@
 #define MAX_COMMAND_LENGTH 100
 
 // Structure pour stocker les informations sur un job
-struct Job {
+typedef struct{
     pid_t pid;        // PID du processus
     int status;       // Statut du processus (terminé, en cours, etc.)
     char command[MAX_COMMAND_LENGTH];  // Commande du processus
-};
+} Job;
+
+char command[100];
+Job jobs[MAX_JOBS]; // tableau des jobs
+int numJobs = 0; // la derniere commande mis en arriere plan
+
+
+
 
 /*
 comment savoir un processus a changer de status avec waitpid
@@ -80,6 +87,32 @@ void redirectIOPipe(int cmdCourant , int nbPipes, int **fd) {
     }
 }
 
+// Fonction pour afficher la liste des jobs
+void printJobs(Job *jobs , int numJobs) {
+    printf("Liste des jobs en cours:\n");
+    for (int i = 0; i < numJobs; ++i) {
+        printf("Job [%d]: %s (PID %d)\n", i + 1, jobs[i].command, jobs[i].pid);
+    }
+}
+
+
+// Handler pour le signal SIGTSTP (Ctrl+Z)
+void handlerSigTstp(int sig) {
+    // Mettre en pause le processus en cours d'exécution
+    if (numJobs < MAX_JOBS) {
+        int jobIndex = numJobs++;
+		// assignier le pid 
+        jobs[jobIndex].pid = getpid();
+        printf("Job [%d] (%d) stopped\n", jobIndex + 1, jobs[jobIndex].pid);
+		strcpy(jobs[jobIndex].command,command);
+        raise(SIGSTOP); // Suspendre le processus actuel
+        // Afficher la liste des jobs après l'arrêt du processus
+        printJobs(jobs , numJobs);
+    } else {
+        fprintf(stderr, "Trop de jobs actifs, impossible de suspendre\n");
+    }
+}
+
 /*
 void handlerSigInt(int sig) {
 	if (!background) { // si on est dans le forground
@@ -98,7 +131,7 @@ void pipeCommande(cmdline *l) {
 	int** fd = allocateDescripteurs(nbPipes);
 
 	pid_t childpid;
-	pid_t pgid; // Pour stocker le GPID commun
+	pid_t pgid = 0; // Initialiser pgid à 0
 
     for (int i = 0; l->seq[i] != NULL; i++) {
 		// creation de pipe dans le pere 
@@ -113,15 +146,21 @@ void pipeCommande(cmdline *l) {
 			// Rétablir le comportement par défaut de SIGINT
 			Signal(SIGINT, SIG_DFL);
 
-			//modifier le gpid des fils (creer un autre groupe qui contient tous les fils creer par ce que setgpid renvoie un erreur de privileges)
-			if (setpgid(childpid,11000) == -1) {
-				perror("setpgid");
-				exit(EXIT_FAILURE);
-			}
+			// Modifier le GPID des fils
+            if (pgid == 0) {
+                // Si c'est le premier fils, utiliser son PID comme nouveau GPID
+                pgid = getpid();
+				printf("pgid : %d\n",pgid);
+            }
+
+            if (setpgid(0, getpid()) == -1) {
+                perror("setpgid");
+                exit(EXIT_FAILURE);
+            }
 			printf("Processus %d et lui attribuer le gpid : %d \n", getpid(),getgid());
 
 			if(l->background){
-				printf("Processus %d en cours d'exécution en arrière-plan...\n" , getpid());
+				printf("Processus %d en cours d'exécution en arrière-plan...\n" , getpid()); // pq getpid renvoie tjrs le gpid 27908 alors qu'il correspond a rien 
 				Signal(SIGCHLD , SigChildHandler);
 			}
 			// dans 1er commande uniquement qu'on va rederiger la sortie vers l'entrer du pipe otherwise on deriger la sortie du commande vers la sortie standard
@@ -154,17 +193,12 @@ void pipeCommande(cmdline *l) {
 			if (i != 0){
 				close(fd[i-1][1]);
 			}
-			printf("Processus pere %d et lui attribuer le gpid : %d \n", getpid(),getgid());
 
-			// Enregistrez le GPID dans le premier tour de la boucle
-            if (i == 0) {
-                pgid = childpid;
-            }
-  
             //Waitpid(childpid,NULL,0);
 		}
 	}
 }
+
 
 
 
