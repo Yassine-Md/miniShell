@@ -1,0 +1,2 @@
+shell.o: src/shell.c include/readcmd.h include/utils.h include/readcmd.h \
+ include/commandes_internes.h include/csapp.h

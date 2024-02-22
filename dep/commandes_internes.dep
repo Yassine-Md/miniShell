@@ -1,0 +1,2 @@
+commandes_internes.o: src/commandes_internes.c include/csapp.h \
+ include/commandes_internes.h include/readcmd.h
