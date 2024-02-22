@@ -58,9 +58,33 @@ void execCmdExterne(struct cmdline *l , int i){
     }
 }
 
+/*
+void SigChildHandler(int sig){
+    pid_t pid ;
+    while((pid = waitpid(-1,NULL,WNOHANG)) > 0){
+        printf("child num : %d\n" , (int)(pid));
+    }
+    printf("erreur il n'y a plus de fils \n");
+    return ;
+}*/
+
+
 void execCmdWithPipe(struct cmdline *l , int i){
-        execvp(l->seq[i][0], l->seq[i]);
-        perror("execvp"); // En cas d'erreur d'execution de la commande
-        printf("ERROR au niveau de la commade %s\n" , l->seq[i][0]);
-        exit(EXIT_FAILURE);
+
+    execvp(l->seq[i][0], l->seq[i]);
+    perror("execvp"); // En cas d'erreur d'execution de la commande
+    printf("ERROR au niveau de la commade %s\n" , l->seq[i][0]);
+    exit(EXIT_FAILURE);
+
+}
+
+void redirection_in_out (struct cmdline *l){
+     if (l->out != NULL){
+            int num = open(l->out,O_WRONLY|O_CREAT,0644);//verifier si le num n'est pas la strdout
+            dup2(num, 1);                   //O_CREAT pour verifier si le fichier exeistant ou pas   // definir les premissions pour la creation
+        } // c'est le fils on va executer la commande
+        if (l->in !=NULL){
+            int num = open(l->in, O_RDONLY);
+            dup2(num, 0);
+        }
 }
