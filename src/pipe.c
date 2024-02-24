@@ -1,6 +1,7 @@
 #include "pipe.h"
 
 extern pid_t childpid;
+int forground = 0;
 
 void redirectIOPipe(int cmdCourant , int nbPipes, int **fd) {
     if (cmdCourant != 0) { // si ce n'est pas la 1ere commande
@@ -35,8 +36,9 @@ void pipeCommande(cmdline *l) {
         }
         // Installer le gestionnaire pour le signal SIGTSTP dans le processus principal
         Signal(SIGTSTP, handlerCtrlZ);
-        childpid = Fork();   // Stocke le PID du processus fils
+        childpid = Fork();   // Stocke le PID du processus fils      
         printf("childpid %d\n",childpid);
+        forground = 1; 
         if (childpid == 0) { // fils
             Signal(SIGINT, handlerSigInt);
             // Ajouter cette ligne pour retablir le gestionnaire par defaut pour SIGCHLD
@@ -55,7 +57,12 @@ void pipeCommande(cmdline *l) {
             if (l->background) {
                 // Parent process - add the job without waiting
                 addJob(childpid, l->seq[i][0]);
+            }else{
+                while(forground){
+                    sleep(1);
+                }
             }
+            
             if (i != 0) {
                 close(fd[i-1][1]);
             }
