@@ -27,6 +27,7 @@ int numJobs = 0; // la derniere commande mise en arriere-plan
 int main() {
     Signal(SIGINT, SIG_IGN); // ignorer le sigint dans le pere
     Signal(SIGCHLD, SigChildHandler); 
+    Signal(SIGTSTP, handlerCtrlZ);
 
     cmdline *l;
     while (1) {

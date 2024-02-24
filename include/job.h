@@ -20,8 +20,7 @@ typedef struct {
 
 void removeJob(int index);
 void addJob(pid_t pid, char* command);
-void printJobs(cmdline *l);
-int fgJob(pid_t pid);
+void printJobs();
 
 
 

@@ -38,7 +38,7 @@ void pipeCommande(cmdline *l) {
             numPipe++;
         }
         // Installer le gestionnaire pour le signal SIGTSTP dans le processus principal
-        Signal(SIGTSTP, handlerCtrlZ);
+        //Signal(SIGTSTP, handlerCtrlZ);
         childpid = Fork();   // Stocke le PID du processus fils
         printf("childpid %d\n",childpid);
         if (childpid == 0) { // fils
@@ -57,7 +57,9 @@ void pipeCommande(cmdline *l) {
             exit(0);
         }else { // pere
             // Parent process - add the job without waiting
-            addJob(childpid, l->seq[i][0]);
+            if(l->background){
+                addJob(childpid, l->seq[i][0]);
+            }
 
             if(!l->background && i == n-1){
                 // Si c'est la derniere commande et qu'elle n'est pas en arriere-plan, enregistrez le PID du processus en avant-plan
@@ -71,7 +73,7 @@ void pipeCommande(cmdline *l) {
     }
 
     // Attendre que le processus en avant-plan se termine
-    while (!foregroundProcessCompleted) {
+    while (!foregroundProcessCompleted && (l->background == 0)) {
         sleep(1);  // Attendre jusqu'à ce que le gestionnaire de signal marque la fin du processus en avant-plan
     }
 
