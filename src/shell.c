@@ -9,13 +9,13 @@
 #include "commandes_internes.h"
 #include "csapp.h"
 
-#define STDIN 0
-#define STDOUT 1
-#define STDERR 2
-
-#define NUM_PIPES 2
 #define MAX_JOBS 10
 #define MAX_COMMAND_LENGTH 100
+
+#define JOB_STATUS_STOPPED 0
+#define JOB_STATUS_RUNNING 1
+
+pid_t childpid;
 
 // Structure pour stocker les informations sur un job
 typedef struct {
@@ -45,6 +45,13 @@ int** allocateDescripteurs(int nbPipes) {
     }
 
     return fd;
+}
+
+void freeDescripteurs(int** fd, int nbPipes) {
+    for (int i = 0; i < nbPipes; i++) {
+        free(fd[i]);
+    }
+    free(fd);
 }
 
 void closeAllPipe(int **fd , int nbPipe) {
@@ -84,6 +91,32 @@ void removeJob(int index) {
     }
 }
 
+void addJob(pid_t pid, char* command) {
+    // verifeir qu'il y a pas des jobs plus que c'est permis
+    if (numJobs < MAX_JOBS) {
+        jobs[numJobs].pid = pid;
+
+        // Utilisez WIFSTOPPED pour verifier si le processus est en pause
+        if (WIFSTOPPED(jobs[numJobs].status)) {
+            jobs[numJobs].status = JOB_STATUS_STOPPED; 
+        }else{ // running
+            jobs[numJobs].status = JOB_STATUS_RUNNING;
+        }
+        // pour des fin de securite on utilise strncpy
+        strncpy(jobs[numJobs].command, command, MAX_COMMAND_LENGTH);
+        numJobs++;
+    } else {
+        fprintf(stderr, "Nombre maximal de jobs atteint\n");
+    }
+}
+
+void printJobs() {
+    for (int i = 0; i < numJobs; i++) {
+        printf("[%d] %d %s\n", i + 1, jobs[i].pid, jobs[i].command);
+    }
+}
+
+
 void SigChildHandler(int sig) {
     pid_t pid;
     int status;
@@ -117,35 +150,15 @@ void SigChildHandler(int sig) {
 }
 
 
-void addJob(pid_t pid, char* command) {
-    if (numJobs < MAX_JOBS) {
-        jobs[numJobs].pid = pid;
-        jobs[numJobs].status = 0; // Initialiser le statut
-        strncpy(jobs[numJobs].command, command, MAX_COMMAND_LENGTH);
-        numJobs++;
-    } else {
-        fprintf(stderr, "Nombre maximal de jobs atteint\n");
-    }
-}
-
-
-
-void printJobs() {
-    for (int i = 0; i < numJobs; i++) {
-        printf("[%d] %d %s\n", i + 1, jobs[i].pid, jobs[i].command);
-    }
-}
-
 void handlerCtrlZ(int sig) {
     // Handle Ctrl+Z in the child processes
-    printf("Child process %d received Ctrl+Z\n", getpid());
-    addJob(getpid(), command);  // Ajouter le processus fils aux jobs
-    kill(getpid(), SIGSTOP);     // Stop the child processs
+    printf("Ctrl+Z received in the parent process. Adding child process %d to jobs.\n" , childpid);    
+    // Ajouter le processus fils aux jobs
+    addJob(childpid, command);
+    // Envoyer le signal SIGSTOP au processus fils apres l'avoir ajoute aux jobs
+    kill(childpid, SIGSTOP);
 }
-void parentIgnoreCtrlZ(int sig) {
-    // Ignore the Ctrl+Z signal in the parent process
-    printf("Ctrl Z était ignoré dans le parent\n");
-}
+
 
 void pipeCommande(cmdline *l) {
     int n = nbCmd(l);
@@ -153,8 +166,6 @@ void pipeCommande(cmdline *l) {
     int numPipe = 0;
 
     int** fd = allocateDescripteurs(nbPipes);
-
-    pid_t childpid;
 
     for (int i = 0; l->seq[i] != NULL; i++) {
         if (i < nbPipes) {
@@ -164,11 +175,14 @@ void pipeCommande(cmdline *l) {
             }
             numPipe++;
         }
-        childpid = Fork();
+        // Installer le gestionnaire pour le signal SIGTSTP dans le processus principal
+        Signal(SIGTSTP, handlerCtrlZ);
+        childpid = Fork();   // Stocke le PID du processus fils
         printf("childpid %d\n",childpid);
         if (childpid == 0) { // fils
             Signal(SIGINT, handlerSigInt);
-            Signal(SIGTSTP, handlerCtrlZ);
+            // Ajouter cette ligne pour retablir le gestionnaire par defaut pour SIGCHLD
+            Signal(SIGCHLD, SIG_DFL);
 
             if (l->background) {
                 printf("Processus %d en cours d'exécution en arrière-plan...\n", getpid());
@@ -180,7 +194,6 @@ void pipeCommande(cmdline *l) {
             execCmdWithPipe(l, i);
             exit(0);
         }else { // 
-            Signal(SIGTSTP, parentIgnoreCtrlZ);
             if (l->background) {
                 // Parent process - add the job without waiting
                 addJob(childpid, l->seq[i][0]);
@@ -188,14 +201,14 @@ void pipeCommande(cmdline *l) {
             if (i != 0) {
                 close(fd[i-1][1]);
             }
-            //Waitpid(childpid, NULL, 0);
         }
     }
+    freeDescripteurs(fd , nbPipes);
 }
 
 int main() {
-    Signal(SIGINT, SIG_IGN);
-    Signal(SIGCHLD, SigChildHandler);
+    Signal(SIGINT, SIG_IGN); // ignorer le sigint dans le pere
+    Signal(SIGCHLD, SigChildHandler); 
 
     cmdline *l;
     while (1) {
@@ -207,7 +220,6 @@ int main() {
             if (strcmp(l->seq[0][0], "jobs") == 0) {
                 printJobs();
             } else {
-                Signal(SIGTSTP, parentIgnoreCtrlZ);
                 pipeCommande(l);
             }
         }
