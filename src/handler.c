@@ -3,7 +3,7 @@
 extern pid_t childpid;
 extern int numJobs;
 extern Job jobs[MAX_JOBS];
-extern int forground;
+extern volatile int foregroundProcessCompleted ;
 
 void handlerSigInt(int sig) {
     fprintf(stderr, "Processus fils %d : Signal SIGINT reçu. Terminaison en cours...\n", getpid());
@@ -18,7 +18,7 @@ void SigChildHandler(int sig) {
 
     // La boucle while sert e traiter tous les processus fils qui ont change d'etat
     while ((pid = waitpid(-1, &status, WNOHANG | WUNTRACED)) > 0) {
-        forground = 0;
+        foregroundProcessCompleted = 1;
         // Recherche du job correspondant au PID dans le tableau des jobs
         for (int i = 0; i < numJobs; i++) {
             if (jobs[i].pid == pid) {

@@ -32,8 +32,10 @@ void addJob(pid_t pid, char* command) {
     }
 }
 
-void printJobs() {
+void printJobs(cmdline *l) {
     for (int i = 0; i < numJobs; i++) {
-        printf("[%d] %d %s\n", i + 1, jobs[i].pid, jobs[i].command);
+        if(l->background){
+            printf("[%d] %d %s\n", i + 1, jobs[i].pid, jobs[i].command);
+        }
     }
 }

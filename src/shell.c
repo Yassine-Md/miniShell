@@ -36,7 +36,7 @@ int main() {
 
         if (l->seq[0] != NULL) {
             if (strcmp(l->seq[0][0], "jobs") == 0) {
-                printJobs();
+                printJobs(l);
             } else {
                 pipeCommande(l);
             }

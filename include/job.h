@@ -3,6 +3,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include "readcmd.h"
 
 #define MAX_COMMAND_LENGTH 100
 #define MAX_JOBS 10
@@ -19,7 +20,8 @@ typedef struct {
 
 void removeJob(int index);
 void addJob(pid_t pid, char* command);
-void printJobs();
+void printJobs(cmdline *l);
+int fgJob(pid_t pid);
 
 
 
