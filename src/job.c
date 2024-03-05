@@ -38,3 +38,4 @@ void printJobs() {
             printf("[%d] %d %s\n", i + 1, jobs[i].pid, jobs[i].command);
     }
 }
+

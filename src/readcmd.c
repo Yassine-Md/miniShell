@@ -9,6 +9,7 @@
 #include <limits.h>
 #include <string.h>
 #include "readcmd.h"
+#include <ncurses.h>
 
 
 static void memory_error(void)
@@ -46,18 +47,18 @@ static char *readline(void)
         return NULL;
     }
     
-    if (feof(stdin)) { /* End of file (ctrl-d) */
+    if (feof(stdin)) { // End of file (ctrl-d) 
         fflush(stdout);
         exit(0);
     }
 
-    do {
+    do { // pour ajouter 0 a la fin du buffer 
         size_t l = strlen(buf);
         if ((l > 0) && (buf[l-1] == '\n')) {
             l--;
             buf[l] = 0;
             return buf;
-        }
+        } 
         if (buf_len >= (INT_MAX / 2)) memory_error();
         buf_len *= 2;
         buf = xrealloc(buf, buf_len * sizeof(char));
@@ -65,6 +66,46 @@ static char *readline(void)
     } while (1);
 }
 
+/*static char *readline(void) {
+    size_t buf_len = 16;
+    char *buf = xmalloc(buf_len * sizeof(char));
+    size_t pos = 0;
+
+    initscr();  // Initialiser ncurses
+    raw();      // Passer en mode brut pour désactiver la mise en mémoire tampon de ligne
+    keypad(stdscr, TRUE);  // Activer la prise en charge des touches spéciales
+
+    int c;
+    while ((c = getch()) != '\n') {
+        if (c == KEY_UP) {
+            // Mettez ici votre logique pour gérer la touche de flèche vers le haut
+            // ...
+        } else if (c == KEY_DOWN) {
+            // Mettez ici votre logique pour gérer la touche de flèche vers le bas
+            // ...
+        } else if (c == KEY_RIGHT) {
+            // Mettez ici votre logique pour gérer la touche de flèche vers la droite
+            // ...
+        } else if (c == KEY_LEFT) {
+            // Mettez ici votre logique pour gérer la touche de flèche vers la gauche
+            // ...
+        } else {
+            if (pos < buf_len - 1) {
+                buf[pos++] = c;
+            } else {
+                if (buf_len >= (INT_MAX / 2)) memory_error();
+                buf_len *= 2;
+                buf = xrealloc(buf, buf_len * sizeof(char));
+                buf[pos++] = c;
+            }
+        }
+    }
+
+    endwin();  // Terminer ncurses
+
+    buf[pos] = '\0';
+    return buf;
+}*/
 
 /* Split the string in words, according to the simple shell grammar. */
 static char **split_in_words(char *line)
