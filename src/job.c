@@ -2,10 +2,10 @@
 #include <stdio.h>
 
 extern int numJobs;
-extern Job jobs[MAX_JOBS];
 
-void removeJob(int index) {
+void removeJob(int index , Job *jobs) {
     if (index >= 0 && index < numJobs) {
+        jobs[index].pid = 0;
         for (int i = index; i < numJobs - 1; i++) {
             jobs[i] = jobs[i + 1];
         }
@@ -13,7 +13,7 @@ void removeJob(int index) {
     }
 }
 
-void addJob(pid_t pid, char* command) {
+void addJob(pid_t pid, char* command , Job *jobs) {
     // verifeir qu'il y a pas des jobs plus que c'est permis
     if (numJobs < MAX_JOBS) {
         jobs[numJobs].pid = pid;
@@ -33,7 +33,7 @@ void addJob(pid_t pid, char* command) {
 }
 
 
-void printJobs() {
+void printJobs(Job *jobs) {
     for (int i = 0; i < numJobs; i++) {
             printf("[%d] %d %s\n", i + 1, jobs[i].pid, jobs[i].command);
     }

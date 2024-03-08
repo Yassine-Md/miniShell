@@ -1,0 +1,2 @@
+handler.o: src/handler.c include/handler.h include/job.h \
+ include/readcmd.h include/process.h

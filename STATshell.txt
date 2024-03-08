@@ -1,0 +1,23 @@
+Lorsque vous utilisez la commande ps -u pour afficher les processus en cours d'exécution sur un système Unix/Linux, vous obtenez une liste de processus avec différentes informations, y compris la colonne STAT qui représente l'état du processus. Voici une explication générale des codes STAT les plus courants :
+
+    R (Running) : Le processus est en cours d'exécution.
+
+    R+ : Le processus est en cours d'exécution avec une priorité élevée.
+
+    S (Sleeping) : Le processus est en attente et peut être activé lorsque des ressources sont disponibles.
+
+    S+ : Le processus est en attente avec une priorité élevée.
+
+    T (Stopped) : Le processus a été arrêté, soit par une signalisation externe, soit volontairement par le processus lui-même.
+
+    T+ : Le processus a été arrêté avec une priorité élevée.
+
+Les autres codes que vous pourriez rencontrer incluent :
+
+    D (Uninterruptible Sleep) : Le processus est en attente de ressources, et il ne peut pas être interrompu par des signaux normaux. Cela peut se produire lors d'opérations de lecture/écriture bloquantes.
+
+    Z (Zombie) : Le processus a terminé son exécution, mais ses informations d'état sont toujours conservées dans la table des processus jusqu'à ce que son parent les récupère.
+
+    I (Idle) : Le processus est en mode idle, ce qui signifie qu'il est en attente d'instructions.
+
+Ces codes STAT fournissent des informations rapides sur l'état actuel du processus, vous permettant de voir s'il s'exécute, est en attente, a été arrêté, etc. Les codes avec un "+" indiquent généralement une priorité élevée

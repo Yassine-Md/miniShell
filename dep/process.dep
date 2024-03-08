@@ -1,0 +1,1 @@
+process.o: src/process.c include/process.h

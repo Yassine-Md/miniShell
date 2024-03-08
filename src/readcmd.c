@@ -66,46 +66,6 @@ static char *readline(void)
     } while (1);
 }
 
-/*static char *readline(void) {
-    size_t buf_len = 16;
-    char *buf = xmalloc(buf_len * sizeof(char));
-    size_t pos = 0;
-
-    initscr();  // Initialiser ncurses
-    raw();      // Passer en mode brut pour désactiver la mise en mémoire tampon de ligne
-    keypad(stdscr, TRUE);  // Activer la prise en charge des touches spéciales
-
-    int c;
-    while ((c = getch()) != '\n') {
-        if (c == KEY_UP) {
-            // Mettez ici votre logique pour gérer la touche de flèche vers le haut
-            // ...
-        } else if (c == KEY_DOWN) {
-            // Mettez ici votre logique pour gérer la touche de flèche vers le bas
-            // ...
-        } else if (c == KEY_RIGHT) {
-            // Mettez ici votre logique pour gérer la touche de flèche vers la droite
-            // ...
-        } else if (c == KEY_LEFT) {
-            // Mettez ici votre logique pour gérer la touche de flèche vers la gauche
-            // ...
-        } else {
-            if (pos < buf_len - 1) {
-                buf[pos++] = c;
-            } else {
-                if (buf_len >= (INT_MAX / 2)) memory_error();
-                buf_len *= 2;
-                buf = xrealloc(buf, buf_len * sizeof(char));
-                buf[pos++] = c;
-            }
-        }
-    }
-
-    endwin();  // Terminer ncurses
-
-    buf[pos] = '\0';
-    return buf;
-}*/
 
 /* Split the string in words, according to the simple shell grammar. */
 static char **split_in_words(char *line)
@@ -283,6 +243,8 @@ struct cmdline *readcmd(void)
             if (s->background) { // s'il y avait deja un &
                 s->err = "only one bg supported";
                 goto error;
+            }else{
+                s->background = 1;
             }
 
             if (cmd_len == 0) { // si & est present au debut de la ligne
@@ -295,8 +257,6 @@ struct cmdline *readcmd(void)
                 s->err = "misplaced bg";
                 goto error;
             }*/
-
-            s->background = 1;
             break;
 
         default:

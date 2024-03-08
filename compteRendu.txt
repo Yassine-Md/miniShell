@@ -1,0 +1,45 @@
+Introduction :
+
+    Présentez brièvement l'objectif de votre programme.
+    Indiquez les principales fonctionnalités que le programme doit accomplir.
+==> idiquer tous ce qu'il faut programme 
+dans les prochains section parle aussi des difficulte rencontre et si il y a une partie qui n'est pas traiter il faut dire qu'on ne l'a pas traiter
+
+
+Gestion des signaux :
+
+Jobs :
+
+
+Fonction SigChildHandler :
+    Expliquez la nécessité de cette fonction.
+    Détaillez son rôle dans la gestion des changements d'état des processus fils.
+    Discutez de l'utilisation de waitpid et des macros WIF*
+
+Fonction handlerCtrlZ :
+
+
+Fonction pipeCommande :
+    le chois d'allouer au fur et a mesure les pipe (pourquoi ce choix)  et parle aussi des difficulte rencontrer lorsqu'on a volu creer tous les pipes d'un cout et les probleme d'indice 
+
+
+Conclusion
+
+
+Perspectives d'amélioration :
+    dis qu'on peut ajouter les fleches pour revenir a des commandes qu'on a utiliser 
+    qu'on peut se deplacer avec le curseur 
+    qu'on peut ajouter l'auto completion 
+    .......
+
+
+
+
+pour attendre les fils en forground j'ai opte pour une solution qui utilise une variable global qui track si les fils en fourgroud sont terminer ou alors ils sont encore en cours d'execution
+pour cela on a utiliser une variable global foregroundProcessCompleted qui est initialiser dans la fonction pipecommande a 0 (false) et pour modifier cette valeur on a utiliser le handler de sigChild  lorsque le processus fils se terminer ou il a ressu un signal on change directement la valeur de notre variable global a 1(true)
+pour ne pas blocker dans la boucle d'attente qu'on a fait dans le processus pere qui verifie que tant que le processus en forground n'est pas encore terminer en sleep une seconde 
+de meme on met a chaque tour de boucle pour traiter un processus la variable de track de processus de forground a jour tant que on est en forground et qu'il reste encore des commandes a traiter 
+
+
+
+// ajouter pour reprendre les jobs 

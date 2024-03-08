@@ -58,19 +58,8 @@ void execCmdExterne(struct cmdline *l , int i){
     }
 }
 
-/*
-void SigChildHandler(int sig){
-    pid_t pid ;
-    while((pid = waitpid(-1,NULL,WNOHANG)) > 0){
-        printf("child num : %d\n" , (int)(pid));
-    }
-    printf("erreur il n'y a plus de fils \n");
-    return ;
-}*/
-
-
 void execCmdWithPipe(struct cmdline *l , int i){
-
+    redirection_in_out(l);
     execvp(l->seq[i][0], l->seq[i]);
     perror("execvp"); // En cas d'erreur d'execution de la commande
     printf("ERROR au niveau de la commade %s\n" , l->seq[i][0]);

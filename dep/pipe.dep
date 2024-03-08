@@ -1,0 +1,3 @@
+pipe.o: src/pipe.c include/pipe.h include/readcmd.h include/handler.h \
+ include/job.h include/commandes_internes.h include/utils.h \
+ include/csapp.h include/process.h
