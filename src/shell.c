@@ -14,13 +14,6 @@
 #include "process.h"
 
 
-// Fonction pour reprendre un job en background
-void bgCommand(int jobId) {
-    // Mettre en arriere-plan le processus correspondant au jobNumber
-    //system
-}
-
-
 pid_t childpid;
 
 char command[100];
@@ -32,10 +25,10 @@ int numProcess = 0 ;
 
 // Fonction pour reprendre un job en foreground
 void bringToForeground(int jobId ){
-    // Mettre en avant-plan le processus correspondant au jobNumbe
-    // la commande fg si une commande en pause ou en backgroun si on fait bg num de son job elle est mis en forground
-
-    if (kill(jobs[jobId].pid, SIGCONT) == -1) { // envoyer un signial SIGCOUNT pour que le processus se remet en mode R+
+    pid_t jobPid = jobs[jobId-1].pid ;
+    addProcess(jobPid , jobs[jobId-1].command);
+    removeJob(jobId-1 , jobs);
+    if (kill(jobPid, SIGCONT) == -1) { // envoyer un signial SIGCOUNT pour que le processus se remet en mode R+
         perror("kill");
     }
     while (waitForForegroundProcess(process)) {
@@ -63,8 +56,6 @@ int main() {
             }else if (strcmp(l->seq[0][0], "fg") == 0){
                 printf(" Processus %d est mis en forground ...\n" , jobs[atoi(l->seq[0][1])].pid);
                 bringToForeground(atoi(l->seq[0][1]));
-            }else if (strcmp(l->seq[0][0], "bg") == 0){
-
             }else {
                 pipeCommande(l,&childpid,process,jobs);
             }
