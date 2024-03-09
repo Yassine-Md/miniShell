@@ -55,13 +55,6 @@ void launchChild(cmdline *l, int i, int numPipe, int nbPipes, int **fd , pid_t *
     }
 }
 
-void waitForProcesses(Process *process) {
-    while (waitForForegroundProcess(process)) {
-        sleep(1);
-    }
-}
-
-
 void launchChildProcesses(cmdline *l, int numPipe, int nbPipes, int **fd, pid_t *childpid, Job *jobs) {
     for (int i = 0; l->seq[i] != NULL; i++) {
         launchChild(l, i, numPipe, nbPipes, fd, childpid, jobs);
@@ -73,6 +66,13 @@ void launchChildProcesses(cmdline *l, int numPipe, int nbPipes, int **fd, pid_t 
     }
 }
 
+void waitForProcesses(Process *process) {
+    while (waitForForegroundProcess(process)) {
+        sleep(1);
+    }
+}
+
+
 void pipeCommande(cmdline *l, pid_t *childpid, Process *process, Job *jobs) {
     int n = nbCmd(l);
     int nbPipes = n - 1;
@@ -83,13 +83,13 @@ void pipeCommande(cmdline *l, pid_t *childpid, Process *process, Job *jobs) {
         pipe(fd[i]);
     }
 
-    
     launchChildProcesses(l, nbPipes, nbPipes, fd, childpid, jobs);
 
     waitForProcesses(process);
 
     freeDescripteurs(fd, nbPipes);
 }
+
 
 
 void closeAllPipe(int **fd , int nbPipe) {
