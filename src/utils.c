@@ -1,4 +1,3 @@
-
 #include <stdio.h>
 #include <stdlib.h>
 #include "utils.h"
@@ -66,5 +65,3 @@ void freeDescripteurs(int** fd, int nbPipes) {
     }
     free(fd);
 }
-
-

@@ -27,7 +27,7 @@ void processHandler(Process *process , int numProcess , pid_t pid , int status){
                     //printf("Processus [%d] Terminé\n", process[i].pid);
 
                     // Supprimer le processus du tableau des processus
-                    removeProcess(childpid);
+                    removeProcess(i);
                 } else if (WIFSTOPPED(status)) {
                     // Afficher le message indiquant que le processus a été arrêté
                     //printf("Processus [%d] Arrêté\n", process[i].pid);
@@ -90,7 +90,3 @@ void handlerCtrlZ(int sig) {
     // Envoyer le signal SIGSTOP au processus fils apres l'avoir ajoute aux jobs
     kill(childpid, SIGSTOP);
 }
-
-
-
-
