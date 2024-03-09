@@ -1,0 +1,27 @@
+[33m63826d8[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmaster[m[33m)[m errer3
+[33m6ddfdbe[m errer
+[33ma358c9d[m[33m ([m[1;31morigin/master[m[33m, [m[1;31morigin/HEAD[m[33m)[m modularisation de pipe.c tous les fonctionnalite marche
+[33m79960ac[m verification
+[33mde4de51[m readcmd
+[33meeb8ffe[m fg & ctrl Z
+[33m16f9dec[m correction attente forground , quit , processus
+[33m56776a7[m ajout de command quit
+[33mc99f02a[m jobs correction
+[33m0596b96[m Delete brouillon
+[33mc0ff550[m wait forground
+[33m221ba9a[m forgroud wait
+[33m71207ae[m modularisation
+[33m50a5e8c[m ctrl Z & Jobs
+[33m72e2284[m commandes_interne
+[33mec2898a[m ctrl Z
+[33mad03041[m ctrl z
+[33mc212a98[m inOut
+[33ma7dd77d[m jobs
+[33me47f6f9[m makefile
+[33ma6e91c9[m Delete src/brouillon
+[33m30ed274[m execution avec plusieurs pipes
+[33ma3b0710[m erreurs chaines pipes
+[33md2afd06[m correction makefile
+[33m8d8f17e[m organisation des fichiers et modification du Makefile
+[33ma53258c[m modularisation du code et terminer la fonction pipeCOmmande
+[33m8df807d[m commande simple interne externe et pipe unique

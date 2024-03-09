@@ -2,17 +2,20 @@
 extern Process process[MAX_PROCESS];
 extern int numProcess;
 
-void addProcess(pid_t pid, char* command){
+void addProcess(pid_t pid, char* command) {
     if (numProcess < MAX_PROCESS) {
         process[numProcess].pid = pid;
 
-            // Utilisez WIFSTOPPED pour verifier si le processus est en pause
+        // Utilisez WIFSTOPPED pour vérifier si le processus est en pause
         if (WIFSTOPPED(process[numProcess].status)) {
             process[numProcess].status = PROCESS_STATUS_STOPPED; 
-        }else{ // running
+        } else if (WIFSIGNALED(process[numProcess].status) || WIFEXITED(process[numProcess].status)) {
+            process[numProcess].status = 5; // PROCESS_STATUS_TERMINATED;
+        } else {
             process[numProcess].status = PROCESS_STATUS_RUNNING;
         }
-        // pour des fin de securite on utilise strncpy
+
+        // Pour des raisons de sécurité, on utilise strncpy
         strncpy(process[numProcess].command, command, MAX_COMMAND_LENGTH);
         numProcess++;
     } else {
@@ -41,18 +44,6 @@ void removeProcess(pid_t childpid) {
         numProcess--;
     }
 }
-/*
-void removeProcess(int index) { 
-    if (index >= 0 && index < numProcess) {
-        // Marquer le processus comme terminé
-        process[index].pid = 0;
-        for (int i = index; i < numProcess - 1; i++) {
-            process[i] = process[i + 1];
-        }
-        numProcess--;
-    }
-}
-*/
 
 int waitForForegroundProcess(Process *process) { 
     int count = 0;
