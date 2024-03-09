@@ -42,6 +42,7 @@ void removeProcess(pid_t childpid) {
     }
 }
 
+
 int waitForForegroundProcess(Process *process) { 
     int count = 0;
     while (process[count].pid != 0) {

@@ -16,9 +16,9 @@ typedef struct {
     char command[MAX_COMMAND_LENGTH];  // Commande du processus
 } Process;
 
-
+int findProcessIndex(pid_t childpid);
 int waitForForegroundProcess(Process *process);
-void removeProcess(int index) ;
+void removeProcess(pid_t childpid) ;
 void addProcess(pid_t pid, char* command);
 void printProcess();
 
