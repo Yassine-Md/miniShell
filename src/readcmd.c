@@ -257,11 +257,6 @@ struct cmdline *readcmd(void)
                 s->err = "misplaced bg";
                 goto error;
             }*/
-            /*if (cmd_len == 0 || words[i] != NULL) {
-                s->err = "misplaced bg";
-                goto error;
-            }*/
-
             break;
 
         default:

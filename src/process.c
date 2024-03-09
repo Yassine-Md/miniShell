@@ -41,7 +41,18 @@ void removeProcess(pid_t childpid) {
         numProcess--;
     }
 }
-
+/*
+void removeProcess(int index) { 
+    if (index >= 0 && index < numProcess) {
+        // Marquer le processus comme terminé
+        process[index].pid = 0;
+        for (int i = index; i < numProcess - 1; i++) {
+            process[i] = process[i + 1];
+        }
+        numProcess--;
+    }
+}
+*/
 
 int waitForForegroundProcess(Process *process) { 
     int count = 0;
